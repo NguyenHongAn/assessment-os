@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 from src.models import DeltaClassification, NormalizedArticle
@@ -7,7 +8,7 @@ from src.models import DeltaClassification, NormalizedArticle
 
 def compute_content_hash(markdown: str) -> str:
     """Compute a deterministic SHA-256 hash of normalized Markdown content."""
-    raise NotImplementedError("compute_content_hash is implemented in Sprint 3.")
+    return hashlib.sha256(markdown.encode("utf-8")).hexdigest()
 
 
 def classify_delta(
