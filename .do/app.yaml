@@ -29,7 +29,7 @@ jobs:
         value: "support-kb"
       - key: GEMINI_MODEL
         scope: RUN_TIME
-        value: "gemini-3.8-flash"
+        value: "gemini-3.5-flash-lite"
       - key: SYSTEM_PROMPT
         scope: RUN_TIME
         value: ""

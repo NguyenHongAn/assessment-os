@@ -107,7 +107,7 @@ def load_settings(
         )
 
     store_name = (source.get("GEMINI_FILE_SEARCH_STORE_NAME") or "support-kb").strip()
-    gemini_model = (source.get("GEMINI_MODEL") or "gemini-3.8-flash").strip()
+    gemini_model = (source.get("GEMINI_MODEL") or "gemini-3.5-flash-lite").strip()
     zendesk_locale = (source.get("ZENDESK_LOCALE") or "en-us").strip()
 
     min_articles = _parse_int(source.get("MIN_ARTICLES"), "MIN_ARTICLES", 30)

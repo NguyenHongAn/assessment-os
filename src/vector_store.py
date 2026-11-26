@@ -46,7 +46,7 @@ class GeminiVectorStoreClient:
         self,
         api_key: str,
         store_name: str = "support-kb",
-        model: str = "gemini-3.8-flash",
+        model: str = "gemini-3.5-flash-lite",
         system_prompt: Optional[str] = None,
         chunking_config: Optional[ChunkingConfig] = None,
         api_base_url: str = "https://generativelanguage.googleapis.com",
