@@ -33,6 +33,7 @@ class Settings:
     assistant_name: str = "SupportBot"
     brand_name: str = "Example.com"
     system_prompt: str = ""
+    summary_file: Path = Path("data/last_run.json")
 
     def __repr__(self) -> str:
         return (
@@ -46,6 +47,7 @@ class Settings:
             f"max_articles={self.max_articles!r}, "
             f"articles_dir={self.articles_dir!r}, "
             f"state_file={self.state_file!r}, "
+            f"summary_file={self.summary_file!r}, "
             f"chunk_max_tokens={self.chunk_max_tokens!r}, "
             f"chunk_overlap_tokens={self.chunk_overlap_tokens!r}, "
             f"log_level={self.log_level!r}, "
@@ -118,6 +120,7 @@ def load_settings(
 
     articles_dir = Path((source.get("ARTICLES_DIR") or "data/articles").strip())
     state_file = Path((source.get("STATE_FILE") or "data/state.json").strip())
+    summary_file = Path((source.get("SUMMARY_FILE") or "data/last_run.json").strip())
 
     chunk_max_tokens = _parse_int(
         source.get("CHUNK_MAX_TOKENS"), "CHUNK_MAX_TOKENS", 512
@@ -152,6 +155,7 @@ def load_settings(
         max_articles=max_articles,
         articles_dir=articles_dir,
         state_file=state_file,
+        summary_file=summary_file,
         chunk_max_tokens=chunk_max_tokens,
         chunk_overlap_tokens=chunk_overlap_tokens,
         log_level=log_level,

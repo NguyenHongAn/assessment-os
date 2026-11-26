@@ -1,0 +1,47 @@
+name: kb-daily-sync
+region: nyc
+
+jobs:
+  - name: kb-sync-job
+    kind: SCHEDULED
+    github:
+      repo: NguyenHongAn/assessment-os
+      branch: main
+      deploy_on_push: true
+    dockerfile_path: Dockerfile
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    schedule:
+      cron: "0 2 * * *"
+      time_zone: "UTC"
+    envs:
+      - key: API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: ZENDESK_BASE_URL
+        scope: RUN_TIME
+        value: "https://support.example.com"
+      - key: ZENDESK_LOCALE
+        scope: RUN_TIME
+        value: "en-us"
+      - key: GEMINI_FILE_SEARCH_STORE_NAME
+        scope: RUN_TIME
+        value: "support-kb"
+      - key: GEMINI_MODEL
+        scope: RUN_TIME
+        value: "gemini-3.8-flash"
+      - key: SYSTEM_PROMPT
+        scope: RUN_TIME
+        value: ""
+      - key: MIN_ARTICLES
+        scope: RUN_TIME
+        value: "30"
+      - key: CHUNK_MAX_TOKENS
+        scope: RUN_TIME
+        value: "512"
+      - key: CHUNK_OVERLAP_TOKENS
+        scope: RUN_TIME
+        value: "64"
+      - key: LOG_LEVEL
+        scope: RUN_TIME
+        value: "INFO"
