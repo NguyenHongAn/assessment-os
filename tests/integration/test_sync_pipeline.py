@@ -12,7 +12,7 @@ from dotenv import dotenv_values
 from src.chunking import ChunkingConfig
 from src.converter import save_articles
 from src.delta import JsonStateStore, build_updated_state, classify_delta
-from src.models import NormalizedArticle
+from src.models import DeltaClassification, NormalizedArticle
 from src.scraper import ZendeskScraper
 from src.utils import compute_content_hash
 from src.vector_store import GeminiVectorStoreClient
@@ -200,11 +200,16 @@ def test_tc_i04_live_gemini_file_search_upload_and_query(tmp_path: Path) -> None
     if not api_key:
         pytest.skip("Set API_KEY or GEMINI_API_KEY in environment or .env to run live Gemini test")
 
+    model = (
+        os.environ.get("GEMINI_MODEL")
+        or dotenv_map.get("GEMINI_MODEL")
+        or "gemini-3.8-flash"
+    ).strip()
     store_name = f"kb-sync-live-test-{uuid.uuid4().hex[:8]}"
     client = GeminiVectorStoreClient(
         api_key=api_key,
         store_name=store_name,
-        model="gemini-2.5-flash",
+        model=model,
     )
 
     md_youtube = (

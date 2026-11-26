@@ -20,7 +20,7 @@ def test_env_sample_bootstrap_and_logging() -> None:
     settings = load_settings(env=env, load_dotenv_file=False)
     assert settings.api_key == dummy_secret
     assert settings.store_name == "support-kb"
-    assert settings.gemini_model == "gemini-2.5-flash"
+    assert settings.gemini_model == "gemini-3.8-flash"
     assert settings.zendesk_base_url == "https://support.example.com"
     assert settings.assistant_name == "SupportBot"
     assert settings.brand_name == "Example.com"

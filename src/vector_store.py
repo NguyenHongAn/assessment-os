@@ -46,13 +46,15 @@ class GeminiVectorStoreClient:
         self,
         api_key: str,
         store_name: str = "support-kb",
-        model: str = "gemini-2.5-flash",
+        model: str = "gemini-3.8-flash",
         system_prompt: Optional[str] = None,
         chunking_config: Optional[ChunkingConfig] = None,
         api_base_url: str = "https://generativelanguage.googleapis.com",
         timeout: float = 60.0,
         poll_interval_seconds: float = 2.0,
         max_poll_attempts: int = 60,
+        max_retries: int = 3,
+        backoff_seconds: float = 1.0,
         transport: Optional[httpx.BaseTransport] = None,
         sleep_fn: Optional[Callable[[float], None]] = None,
     ) -> None:
@@ -72,6 +74,8 @@ class GeminiVectorStoreClient:
         self.timeout = timeout
         self.poll_interval_seconds = poll_interval_seconds
         self.max_poll_attempts = max_poll_attempts
+        self.max_retries = max_retries
+        self.backoff_seconds = backoff_seconds
         self.transport = transport
         self._sleep = sleep_fn or time.sleep
         self._store_resource_name: Optional[str] = None
@@ -90,25 +94,39 @@ class GeminiVectorStoreClient:
         url: str,
         **kwargs: Any,
     ) -> dict[str, Any]:
-        try:
-            response = client.request(method, url, **kwargs)
-        except httpx.TransportError as exc:
-            raise VectorStoreError(f"Transport error calling {method} {url}: {exc}") from exc
+        for attempt in range(self.max_retries + 1):
+            try:
+                response = client.request(method, url, **kwargs)
+            except httpx.TransportError as exc:
+                if attempt < self.max_retries:
+                    self._sleep(self.backoff_seconds * (2**attempt))
+                    continue
+                raise VectorStoreError(f"Transport error calling {method} {url}: {exc}") from exc
 
-        if response.status_code >= 400:
-            raise VectorStoreError(
-                f"Gemini API error {response.status_code} on {method} {url}: {response.text[:300]}"
-            )
+            if response.status_code == 429 or 500 <= response.status_code < 600:
+                if attempt < self.max_retries:
+                    self._sleep(self.backoff_seconds * (2**attempt))
+                    continue
+                raise VectorStoreError(
+                    f"Gemini API error {response.status_code} on {method} {url}: {response.text[:300]}"
+                )
 
-        if not response.content:
-            return {}
-        try:
-            data = response.json()
-        except ValueError as exc:
-            raise VectorStoreError(f"Invalid JSON response from {method} {url}: {exc}") from exc
-        if not isinstance(data, dict):
-            raise VectorStoreError(f"Expected JSON object from {method} {url}")
-        return data
+            if response.status_code >= 400:
+                raise VectorStoreError(
+                    f"Gemini API error {response.status_code} on {method} {url}: {response.text[:300]}"
+                )
+
+            if not response.content:
+                return {}
+            try:
+                data = response.json()
+            except ValueError as exc:
+                raise VectorStoreError(f"Invalid JSON response from {method} {url}: {exc}") from exc
+            if not isinstance(data, dict):
+                raise VectorStoreError(f"Expected JSON object from {method} {url}")
+            return data
+
+        raise VectorStoreError(f"Exhausted retries calling {method} {url}")
 
     def ensure_store(self) -> str:
         """Return existing File Search Store resource name or create a new one."""
