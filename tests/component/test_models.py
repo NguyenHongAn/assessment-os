@@ -16,7 +16,7 @@ def test_article_and_normalized_defaults() -> None:
         id=1,
         title="Sample",
         slug="sample",
-        html_url="https://support.optisigns.com/hc/en-us/articles/1-sample",
+        html_url="https://support.example.com/hc/en-us/articles/1-sample",
         updated_at="2026-01-01T00:00:00Z",
         body_html="<p>Hi</p>",
     )

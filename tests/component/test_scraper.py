@@ -1,18 +1,19 @@
 from __future__ import annotations
 
-import json
-
 import httpx
 import pytest
 
+from src.interfaces import ArticleSource
 from src.scraper import ScraperError, ZendeskScraper, extract_slug
+
+BASE_URL = "https://support.example.com"
 
 
 def _make_article(idx: int, *, draft: bool = False, body: str = "<p>Hello</p>") -> dict:
     return {
         "id": 1000 + idx,
         "title": f"Article {idx}",
-        "html_url": f"https://support.optisigns.com/hc/en-us/articles/{1000 + idx}-Article-{idx}",
+        "html_url": f"{BASE_URL}/hc/en-us/articles/{1000 + idx}-Article-{idx}",
         "updated_at": "2026-01-15T10:00:00Z",
         "section_id": 42,
         "draft": draft,
@@ -34,11 +35,12 @@ def test_tc_c01_paginated_fetch_and_max_articles() -> None:
             200,
             json={
                 "articles": page1_articles,
-                "next_page": "https://support.optisigns.com/api/v2/help_center/en-us/articles.json?page=2",
+                "next_page": f"{BASE_URL}/api/v2/help_center/en-us/articles.json?page=2",
             },
         )
 
-    scraper = ZendeskScraper(transport=httpx.MockTransport(handler))
+    scraper = ZendeskScraper(base_url=BASE_URL, transport=httpx.MockTransport(handler))
+    assert isinstance(scraper, ArticleSource)
     articles = scraper.fetch_articles(min_articles=30)
 
     assert len(articles) == 40
@@ -62,7 +64,8 @@ def test_tc_c02_filters_drafts_and_empty_bodies() -> None:
     }
 
     scraper = ZendeskScraper(
-        transport=httpx.MockTransport(lambda req: httpx.Response(200, json=payload))
+        base_url=BASE_URL,
+        transport=httpx.MockTransport(lambda req: httpx.Response(200, json=payload)),
     )
     articles = scraper.fetch_articles(min_articles=1)
 
@@ -86,6 +89,7 @@ def test_tc_c02_retries_on_429_and_503_then_succeeds() -> None:
         )
 
     scraper = ZendeskScraper(
+        base_url=BASE_URL,
         max_retries=3,
         backoff_seconds=0.25,
         transport=httpx.MockTransport(handler),
@@ -101,6 +105,7 @@ def test_tc_c02_retries_on_429_and_503_then_succeeds() -> None:
 def test_tc_c02_fails_after_max_retries_and_immediately_on_404() -> None:
     sleep_calls: list[float] = []
     scraper_500 = ZendeskScraper(
+        base_url=BASE_URL,
         max_retries=2,
         backoff_seconds=0.1,
         transport=httpx.MockTransport(lambda req: httpx.Response(500)),
@@ -118,6 +123,7 @@ def test_tc_c02_fails_after_max_retries_and_immediately_on_404() -> None:
         return httpx.Response(404)
 
     scraper_404 = ZendeskScraper(
+        base_url=BASE_URL,
         max_retries=3,
         transport=httpx.MockTransport(handler_404),
         sleep_fn=lambda _: None,
@@ -127,16 +133,22 @@ def test_tc_c02_fails_after_max_retries_and_immediately_on_404() -> None:
     assert attempts_404 == 1
 
 
-def test_extract_slug_fallbacks() -> None:
+def test_extract_slug_fallbacks_and_base_url_validation() -> None:
     assert (
         extract_slug(
             {
                 "id": 99,
                 "title": "Some Title",
-                "html_url": "https://support.optisigns.com/hc/en-us/articles/360016-How-To-Use",
+                "html_url": f"{BASE_URL}/hc/en-us/articles/360016-How-To-Use",
             }
         )
         == "how-to-use"
     )
     assert extract_slug({"id": 99, "title": "Fallback Title!", "html_url": ""}) == "fallback-title"
     assert extract_slug({"id": 99, "title": "", "html_url": ""}) == "article-99"
+
+    with pytest.raises(ValueError, match="base_url"):
+        ZendeskScraper(base_url="")
+
+    with pytest.raises(ValueError, match="base_url"):
+        ZendeskScraper(base_url="ftp://support.example.com")

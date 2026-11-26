@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
 from src.models import DeltaClassification, NormalizedArticle
+from src.utils import compute_content_hash
 
-
-def compute_content_hash(markdown: str) -> str:
-    """Compute a deterministic SHA-256 hash of normalized Markdown content."""
-    return hashlib.sha256(markdown.encode("utf-8")).hexdigest()
+__all__ = ["compute_content_hash", "classify_delta"]
 
 
 def classify_delta(

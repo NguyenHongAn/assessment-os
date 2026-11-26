@@ -4,6 +4,7 @@ import logging
 import sys
 from typing import Optional
 
+LOGGER_NAME = "kb_sync"
 REDACTED = "***REDACTED***"
 
 
@@ -43,7 +44,7 @@ def configure_logging(
     secrets: Optional[list[str]] = None,
 ) -> logging.Logger:
     """Configure and return the application logger with secret redaction."""
-    logger = logging.getLogger("optisigns_sync")
+    logger = logging.getLogger(LOGGER_NAME)
     numeric_level = getattr(logging, level.upper(), logging.INFO)
     logger.setLevel(numeric_level)
     logger.propagate = False

@@ -8,10 +8,11 @@ from urllib.parse import urlparse
 
 import httpx
 
-from src.converter import slugify
+from src.logging_config import LOGGER_NAME
 from src.models import Article
+from src.utils import slugify
 
-logger = logging.getLogger("optisigns_sync")
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class ScraperError(RuntimeError):
@@ -39,19 +40,26 @@ class ZendeskScraper:
 
     def __init__(
         self,
-        base_url: str = "https://support.optisigns.com",
+        base_url: str,
         locale: str = "en-us",
         timeout: float = 30.0,
         max_retries: int = 3,
         backoff_seconds: float = 0.5,
+        user_agent: str = "HelpCenter-KB-Sync/1.0",
         transport: Optional[httpx.BaseTransport] = None,
         sleep_fn: Optional[Callable[[float], None]] = None,
     ) -> None:
-        self.base_url = base_url.rstrip("/")
+        cleaned_url = (base_url or "").strip().rstrip("/")
+        if not cleaned_url or not (
+            cleaned_url.startswith("http://") or cleaned_url.startswith("https://")
+        ):
+            raise ValueError("base_url must be a non-empty http:// or https:// URL.")
+        self.base_url = cleaned_url
         self.locale = locale
         self.timeout = timeout
         self.max_retries = max_retries
         self.backoff_seconds = backoff_seconds
+        self.user_agent = user_agent
         self.transport = transport
         self._sleep = sleep_fn or time.sleep
 
@@ -116,7 +124,7 @@ class ZendeskScraper:
             timeout=self.timeout,
             follow_redirects=True,
             transport=self.transport,
-            headers={"Accept": "application/json", "User-Agent": "OptiBot-Sync/1.0"},
+            headers={"Accept": "application/json", "User-Agent": self.user_agent},
         ) as client:
             while next_url:
                 if next_url in seen_urls:

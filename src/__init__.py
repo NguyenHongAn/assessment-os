@@ -1,1 +1,1 @@
-"""OptiSigns support knowledge base scraper and Gemini File Search sync."""
+"""Help Center knowledge base scraper and Gemini File Search sync."""

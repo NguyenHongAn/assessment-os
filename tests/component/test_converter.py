@@ -2,8 +2,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.converter import html_to_markdown, save_article_markdown, save_articles, slugify
+from src.converter import (
+    HtmlToMarkdownConverter,
+    html_to_markdown,
+    save_article_markdown,
+    save_articles,
+    slugify,
+)
+from src.interfaces import ArticleConverter
 from src.models import Article
+
+BASE_URL = "https://support.example.com"
 
 
 def test_tc_c03_preserves_structure_links_code_and_strips_noise() -> None:
@@ -27,20 +36,21 @@ def test_tc_c03_preserves_structure_links_code_and_strips_noise() -> None:
     </div>
     <div class="related-articles">Other links</div>
     <script>console.log("tracker")</script>
-    <footer>Copyright OptiSigns</footer>
+    <footer>Copyright Example Corp</footer>
     """
     md_text = html_to_markdown(
         html,
-        article_url="https://support.optisigns.com/hc/en-us/articles/360016-How-to-add-a-YouTube-video",
+        article_url=f"{BASE_URL}/hc/en-us/articles/360016-How-to-add-a-YouTube-video",
         title="How to add a YouTube video",
     )
 
-    assert md_text.startswith("# How to add a YouTube video\n\nArticle URL: https://support.optisigns.com/hc/en-us/articles/360016-How-to-add-a-YouTube-video\n")
-    # Duplicate H1 matching title is deduplicated
+    assert md_text.startswith(
+        f"# How to add a YouTube video\n\nArticle URL: {BASE_URL}/hc/en-us/articles/360016-How-to-add-a-YouTube-video\n"
+    )
     assert md_text.count("# How to add a YouTube video") == 1
     assert "## Step 1" in md_text
     assert "[this guide](/hc/en-us/articles/123-other)" in md_text
-    assert "```json\n{\"type\": \"youtube\"}\n```" in md_text
+    assert '```json\n{"type": "youtube"}\n```' in md_text
     assert "[Embedded Video](https://www.youtube.com/embed/dQw4w9WgXcQ)" in md_text
 
     for noise in ("Breadcrumb", "Home > Docs", "Accept cookies", "tracker", "Copyright", "related-articles", "<script", "<style", "<nav"):
@@ -52,7 +62,7 @@ def test_tc_c04_save_article_markdown_naming_and_collisions(tmp_path: Path) -> N
         id=101,
         title="Setup Guide",
         slug="setup-guide",
-        html_url="https://support.optisigns.com/hc/en-us/articles/101-setup-guide",
+        html_url=f"{BASE_URL}/hc/en-us/articles/101-setup-guide",
         updated_at="2026-01-01T00:00:00Z",
         body_html="<p>First guide</p>",
     )
@@ -60,7 +70,7 @@ def test_tc_c04_save_article_markdown_naming_and_collisions(tmp_path: Path) -> N
         id=202,
         title="Setup Guide",
         slug="setup-guide",
-        html_url="https://support.optisigns.com/hc/en-us/articles/202-setup-guide",
+        html_url=f"{BASE_URL}/hc/en-us/articles/202-setup-guide",
         updated_at="2026-01-02T00:00:00Z",
         body_html="<p>Second guide</p>",
     )
@@ -74,7 +84,6 @@ def test_tc_c04_save_article_markdown_naming_and_collisions(tmp_path: Path) -> N
     assert len(saved[0].content_hash) == 64
     assert saved[0].content_hash != saved[1].content_hash
 
-    # Deterministic re-save
     again = save_article_markdown(a1, output_dir=tmp_path)
     assert again.content_hash == saved[0].content_hash
 
@@ -92,3 +101,25 @@ def test_tc_c05_malformed_and_empty_html_graceful() -> None:
 
     assert slugify("Café & Résumé: 100%!") == "cafe-resume-100"
     assert slugify("!!!", fallback="article-7") == "article-7"
+
+
+def test_custom_converter_dependency_injection(tmp_path: Path) -> None:
+    custom = HtmlToMarkdownConverter(
+        citation_label="Source",
+        noise_tokens={"custom-widget"},
+    )
+    assert isinstance(custom, ArticleConverter)
+
+    article = Article(
+        id=303,
+        title="Custom Converter",
+        slug="custom-converter",
+        html_url=f"{BASE_URL}/hc/en-us/articles/303-custom",
+        updated_at="2026-01-03T00:00:00Z",
+        body_html='<div class="custom-widget">Remove me</div><p>Keep me</p>',
+    )
+    saved = save_articles([article], output_dir=tmp_path, converter=custom)
+    text = saved[0].file_path.read_text(encoding="utf-8")
+    assert f"Source: {BASE_URL}/hc/en-us/articles/303-custom" in text
+    assert "Remove me" not in text
+    assert "Keep me" in text

@@ -7,16 +7,16 @@
     {
       "id": 360016102933,
       "title": "How to add a YouTube video",
-      "html_url": "https://support.optisigns.com/hc/en-us/articles/360016102933-How-to-add-a-YouTube-video",
+      "html_url": "https://support.example.com/hc/en-us/articles/360016102933-How-to-add-a-YouTube-video",
       "updated_at": "2026-01-15T10:30:00Z",
       "section_id": 360004012345,
       "draft": false,
-      "body": "<nav class=\"article-nav\">Breadcrumb</nav><style>.ad { display: none; }</style><h1>Adding a YouTube Video</h1><p>Open the <strong>Files/Assets</strong> page and select the <a href=\"/hc/en-us/articles/123-other\">YouTube app</a>.</p><pre><code class=\"language-json\">{\n  \"type\": \"youtube\",\n  \"url\": \"https://www.youtube.com/watch?v=dQw4w9WgXcQ\"\n}</code></pre><script>console.log('ad-tracker');</script><footer>Copyright OptiSigns</footer>"
+      "body": "<nav class=\"article-nav\">Breadcrumb</nav><style>.ad { display: none; }</style><h1>Adding a YouTube Video</h1><p>Open the <strong>Files/Assets</strong> page and select the <a href=\"/hc/en-us/articles/123-other\">YouTube app</a>.</p><pre><code class=\"language-json\">{\n  \"type\": \"youtube\",\n  \"url\": \"https://www.youtube.com/watch?v=dQw4w9WgXcQ\"\n}</code></pre><script>console.log('ad-tracker');</script><footer>Copyright Example Corp</footer>"
     },
     {
       "id": 360016102999,
       "title": "Getting Started with Playlists",
-      "html_url": "https://support.optisigns.com/hc/en-us/articles/360016102999-Getting-Started-with-Playlists",
+      "html_url": "https://support.example.com/hc/en-us/articles/360016102999-Getting-Started-with-Playlists",
       "updated_at": "2026-01-10T08:00:00Z",
       "section_id": 360004012345,
       "draft": false,
@@ -25,7 +25,7 @@
     {
       "id": 360016103000,
       "title": "Internal Draft Article",
-      "html_url": "https://support.optisigns.com/hc/en-us/articles/360016103000-Internal-Draft-Article",
+      "html_url": "https://support.example.com/hc/en-us/articles/360016103000-Internal-Draft-Article",
       "updated_at": "2026-01-12T09:00:00Z",
       "section_id": 360004012345,
       "draft": true,

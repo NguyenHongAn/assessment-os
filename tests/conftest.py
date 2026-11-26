@@ -29,6 +29,7 @@ def valid_env(tmp_data_dir: Path) -> dict[str, str]:
     """Return a valid minimal environment mapping for load_settings."""
     return {
         "API_KEY": "test-dummy-api-key-12345",
+        "ZENDESK_BASE_URL": "https://support.example.com",
         "GEMINI_FILE_SEARCH_STORE_NAME": "test-store",
         "GEMINI_MODEL": "gemini-2.5-flash",
         "ARTICLES_DIR": str(tmp_data_dir / "articles"),

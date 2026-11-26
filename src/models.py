@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-OPTIBOT_SYSTEM_PROMPT = (
-    "You are OptiBot, the customer-support bot for OptiSigns.com.\n"
+DEFAULT_SYSTEM_PROMPT_TEMPLATE = (
+    "You are {assistant_name}, the customer-support bot for {brand_name}.\n"
     "• Tone: helpful, factual, concise.\n"
     "• Only answer using the uploaded docs.\n"
     "• Max 5 bullet points; else link to the doc.\n"
@@ -13,9 +13,23 @@ OPTIBOT_SYSTEM_PROMPT = (
 )
 
 
+def build_system_prompt(
+    assistant_name: str = "SupportBot",
+    brand_name: str = "Example.com",
+    custom_prompt: Optional[str] = None,
+) -> str:
+    """Build the assistant system prompt from persona settings or an explicit override."""
+    if custom_prompt and custom_prompt.strip():
+        return custom_prompt.strip()
+    return DEFAULT_SYSTEM_PROMPT_TEMPLATE.format(
+        assistant_name=assistant_name.strip() or "SupportBot",
+        brand_name=brand_name.strip() or "Example.com",
+    )
+
+
 @dataclass(frozen=True)
 class Article:
-    """Raw Help Center article fetched from Zendesk."""
+    """Raw Help Center article fetched from a knowledge base source."""
 
     id: int
     title: str

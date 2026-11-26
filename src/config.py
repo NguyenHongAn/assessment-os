@@ -7,6 +7,8 @@ from typing import Mapping, Optional
 
 from dotenv import load_dotenv
 
+from src.models import build_system_prompt
+
 
 class ConfigError(ValueError):
     """Raised when required configuration is missing or invalid."""
@@ -28,6 +30,9 @@ class Settings:
     chunk_max_tokens: int
     chunk_overlap_tokens: int
     log_level: str
+    assistant_name: str = "SupportBot"
+    brand_name: str = "Example.com"
+    system_prompt: str = ""
 
     def __repr__(self) -> str:
         return (
@@ -43,7 +48,9 @@ class Settings:
             f"state_file={self.state_file!r}, "
             f"chunk_max_tokens={self.chunk_max_tokens!r}, "
             f"chunk_overlap_tokens={self.chunk_overlap_tokens!r}, "
-            f"log_level={self.log_level!r}"
+            f"log_level={self.log_level!r}, "
+            f"assistant_name={self.assistant_name!r}, "
+            f"brand_name={self.brand_name!r}"
             ")"
         )
 
@@ -73,7 +80,8 @@ def load_settings(
     """Load and validate application settings from environment variables.
 
     Resolves the Gemini API key from ``API_KEY`` first, falling back to
-    ``GEMINI_API_KEY``.
+    ``GEMINI_API_KEY``. Requires ``ZENDESK_BASE_URL`` to be set to a valid
+    ``http://`` or ``https://`` URL.
     """
     if env is None:
         if load_dotenv_file:
@@ -88,13 +96,16 @@ def load_settings(
             "Missing Gemini API key: set API_KEY or GEMINI_API_KEY in the environment."
         )
 
-    store_name = (
-        source.get("GEMINI_FILE_SEARCH_STORE_NAME") or "optisigns-support-kb"
-    ).strip()
+    zendesk_base_url = (source.get("ZENDESK_BASE_URL") or "").strip().rstrip("/")
+    if not zendesk_base_url or not (
+        zendesk_base_url.startswith("http://") or zendesk_base_url.startswith("https://")
+    ):
+        raise ConfigError(
+            "Missing or invalid ZENDESK_BASE_URL: must be an http:// or https:// URL."
+        )
+
+    store_name = (source.get("GEMINI_FILE_SEARCH_STORE_NAME") or "support-kb").strip()
     gemini_model = (source.get("GEMINI_MODEL") or "gemini-2.5-flash").strip()
-    zendesk_base_url = (
-        source.get("ZENDESK_BASE_URL") or "https://support.optisigns.com"
-    ).strip().rstrip("/")
     zendesk_locale = (source.get("ZENDESK_LOCALE") or "en-us").strip()
 
     min_articles = _parse_int(source.get("MIN_ARTICLES"), "MIN_ARTICLES", 30)
@@ -123,6 +134,13 @@ def load_settings(
         )
 
     log_level = (source.get("LOG_LEVEL") or "INFO").strip().upper()
+    assistant_name = (source.get("ASSISTANT_NAME") or "SupportBot").strip()
+    brand_name = (source.get("BRAND_NAME") or "Example.com").strip()
+    system_prompt = build_system_prompt(
+        assistant_name=assistant_name,
+        brand_name=brand_name,
+        custom_prompt=source.get("SYSTEM_PROMPT"),
+    )
 
     return Settings(
         api_key=api_key,
@@ -137,4 +155,7 @@ def load_settings(
         chunk_max_tokens=chunk_max_tokens,
         chunk_overlap_tokens=chunk_overlap_tokens,
         log_level=log_level,
+        assistant_name=assistant_name,
+        brand_name=brand_name,
+        system_prompt=system_prompt,
     )

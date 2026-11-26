@@ -7,7 +7,7 @@ from src.logging_config import configure_logging
 
 
 def main() -> int:
-    """Run the one-shot OptiSigns scrape-and-sync job."""
+    """Run the one-shot scrape-and-sync job."""
     try:
         settings = load_settings()
     except ConfigError as exc:

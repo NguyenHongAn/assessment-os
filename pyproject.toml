@@ -1,7 +1,7 @@
 [project]
 name = "assessment-os"
 version = "0.1.0"
-description = "OptiSigns support knowledge base scraper and Gemini File Search sync"
+description = "Reusable Help Center knowledge base scraper and Gemini File Search sync"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
