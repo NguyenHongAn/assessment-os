@@ -25,7 +25,7 @@ def build_system_prompt(
 ) -> str:
     """Build the assistant system prompt from persona settings or an explicit override."""
     if custom_prompt and custom_prompt.strip():
-        return custom_prompt.strip()
+        return custom_prompt.strip().replace("\\n", "\n")
     return DEFAULT_SYSTEM_PROMPT_TEMPLATE.format(
         assistant_name=assistant_name.strip() or "SupportBot",
         brand_name=brand_name.strip() or "Example.com",

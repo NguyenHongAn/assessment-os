@@ -142,3 +142,29 @@ def test_tc_c12_system_prompt_template_and_override() -> None:
 
     overridden = build_system_prompt(custom_prompt="Custom prompt line")
     assert overridden == "Custom prompt line"
+
+    escaped_env_prompt = (
+        'Line 1.\\n• Line 2.\\n• Line 3.\\n• Line 4.\\n• Cite "Article URL:" lines.'
+    )
+    multiline_env_prompt = (
+        'Line 1.\n• Line 2.\n• Line 3.\n• Line 4.\n• Cite "Article URL:" lines.'
+    )
+    s_escaped = load_settings(
+        env={
+            "API_KEY": "k",
+            "ZENDESK_BASE_URL": "https://support.example.com",
+            "SYSTEM_PROMPT": escaped_env_prompt,
+        },
+        load_dotenv_file=False,
+    )
+    s_multiline = load_settings(
+        env={
+            "API_KEY": "k",
+            "ZENDESK_BASE_URL": "https://support.example.com",
+            "SYSTEM_PROMPT": multiline_env_prompt,
+        },
+        load_dotenv_file=False,
+    )
+    assert s_escaped.system_prompt == multiline_env_prompt
+    assert s_multiline.system_prompt == multiline_env_prompt
+    assert len(s_escaped.system_prompt.splitlines()) == 5
