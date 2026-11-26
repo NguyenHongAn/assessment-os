@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -11,6 +12,10 @@ DEFAULT_SYSTEM_PROMPT_TEMPLATE = (
     "• Max 5 bullet points; else link to the doc.\n"
     '• Cite up to 3 "Article URL:" lines per reply.'
 )
+
+_BULLET_RE = re.compile(r"^\s*(?:[-*•]|\d+\.)\s+")
+_ARTICLE_URL_RE = re.compile(r"^\s*Article URL:\s*https?://\S+", re.IGNORECASE)
+_HTTP_URL_RE = re.compile(r"https?://\S+")
 
 
 def build_system_prompt(
@@ -25,6 +30,37 @@ def build_system_prompt(
         assistant_name=assistant_name.strip() or "SupportBot",
         brand_name=brand_name.strip() or "Example.com",
     )
+
+
+def validate_assistant_response(
+    response_text: str,
+    max_bullets: int = 5,
+    max_citations: int = 3,
+) -> list[str]:
+    """Validate an assistant reply against bullet-count and citation rules."""
+    text = (response_text or "").strip()
+    if not text:
+        return ["Response text is empty."]
+
+    violations: list[str] = []
+    lines = text.splitlines()
+
+    bullet_count = sum(1 for line in lines if _BULLET_RE.match(line))
+    has_doc_link = bool(_HTTP_URL_RE.search(text))
+    if bullet_count > max_bullets and not has_doc_link:
+        violations.append(
+            f"Found {bullet_count} bullet points (max {max_bullets}) without a documentation link."
+        )
+
+    citation_count = sum(1 for line in lines if _ARTICLE_URL_RE.match(line))
+    if citation_count == 0:
+        violations.append('Missing required "Article URL:" citation line.')
+    elif citation_count > max_citations:
+        violations.append(
+            f'Found {citation_count} "Article URL:" lines (max {max_citations}).'
+        )
+
+    return violations
 
 
 @dataclass(frozen=True)
@@ -53,6 +89,18 @@ class NormalizedArticle:
     markdown: str
     content_hash: str
     file_path: Optional[Path] = None
+
+
+@dataclass(frozen=True)
+class SyncStateEntry:
+    """Persisted sync state for a single knowledge base article."""
+
+    article_id: int
+    slug: str
+    content_hash: str
+    updated_at: str
+    html_url: str
+    remote_doc_name: Optional[str] = None
 
 
 @dataclass

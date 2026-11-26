@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Optional, Protocol, runtime_checkable
+from typing import Mapping, Optional, Protocol, runtime_checkable
 
-from src.models import Article, DeltaClassification, UploadResult
+from src.models import Article, DeltaClassification, SyncStateEntry, UploadResult
 
 
 @runtime_checkable
@@ -24,6 +24,19 @@ class ArticleConverter(Protocol):
 
     def convert(self, article: Article) -> str:
         """Convert an Article into normalized Markdown text."""
+        ...
+
+
+@runtime_checkable
+class StateStore(Protocol):
+    """Protocol for loading and persisting article sync state."""
+
+    def load(self) -> dict[int, SyncStateEntry]:
+        """Load previously synced article entries keyed by article ID."""
+        ...
+
+    def save(self, state: Mapping[int, SyncStateEntry]) -> None:
+        """Persist synced article entries."""
         ...
 
 
