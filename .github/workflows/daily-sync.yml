@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build Docker image
         run: docker build -t kb-sync:ci .
@@ -73,7 +73,7 @@ jobs:
 
       - name: Upload last-run summary artifact
         if: always() && hashFiles('data/last_run.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: last-run-summary
           path: data/last_run.json

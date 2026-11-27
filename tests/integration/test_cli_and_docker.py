@@ -95,4 +95,5 @@ def test_tc_i05_docker_and_github_actions_workflow() -> None:
     assert "docker run" in workflow
     assert "secrets.API_KEY" in workflow
     assert "GITHUB_STEP_SUMMARY" in workflow
-    assert "actions/upload-artifact@v4" in workflow
+    assert "actions/checkout@v6" in workflow
+    assert "actions/upload-artifact@v7" in workflow
