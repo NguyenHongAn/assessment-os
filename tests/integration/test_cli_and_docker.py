@@ -75,7 +75,9 @@ def test_tc_i05_docker_and_digitalocean_spec_files() -> None:
     repo_root = Path(__file__).resolve().parents[2]
 
     dockerfile = (repo_root / "Dockerfile").read_text(encoding="utf-8")
-    assert "FROM python:3.11-slim" in dockerfile
+    assert "FROM python:3.11-slim AS builder" in dockerfile
+    assert "FROM python:3.11-slim AS runtime" in dockerfile
+    assert "COPY --from=builder" in dockerfile
     assert 'ENTRYPOINT ["python", "main.py"]' in dockerfile
     assert "USER appuser" in dockerfile
 
