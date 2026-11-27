@@ -84,6 +84,7 @@ class JsonStateStore:
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as fh:
                 fh.write(payload)
+            os.chmod(tmp_path, 0o644)
             tmp_path.replace(self.state_file)
         except Exception:
             if tmp_path.exists():

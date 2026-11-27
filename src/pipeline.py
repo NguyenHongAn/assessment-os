@@ -34,6 +34,7 @@ def _write_summary_artifact(summary_file: Path, summary: RunSummary) -> None:
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             fh.write(text)
+        os.chmod(tmp_path, 0o644)
         tmp_path.replace(summary_file)
     except Exception:
         if tmp_path.exists():

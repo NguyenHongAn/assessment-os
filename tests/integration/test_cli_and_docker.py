@@ -99,3 +99,5 @@ def test_tc_i05_docker_and_github_actions_workflow() -> None:
     assert "GITHUB_STEP_SUMMARY" in workflow
     assert "actions/checkout@v6" in workflow
     assert "actions/upload-artifact@v7" in workflow
+    assert "if-no-files-found: ignore" in workflow
+    assert "hashFiles(" not in workflow

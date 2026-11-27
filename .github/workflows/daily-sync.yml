@@ -47,6 +47,7 @@ jobs:
           fi
 
           docker run --rm \
+            --user "$(id -u):$(id -g)" \
             -v "${GITHUB_WORKSPACE}/data:/app/data" \
             -e API_KEY \
             -e ZENDESK_BASE_URL \
@@ -82,9 +83,10 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload last-run summary artifact
-        if: always() && hashFiles('data/last_run.json') != ''
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: last-run-summary
           path: data/last_run.json
+          if-no-files-found: ignore
           retention-days: 30
