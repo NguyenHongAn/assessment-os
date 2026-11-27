@@ -27,28 +27,38 @@ jobs:
       - name: Run one-shot sync container
         env:
           DRY_RUN: ${{ inputs.dry_run }}
+          API_KEY: ${{ secrets.API_KEY }}
+          ZENDESK_BASE_URL: ${{ secrets.ZENDESK_BASE_URL }}
+          SYSTEM_PROMPT: ${{ secrets.SYSTEM_PROMPT }}
+          GEMINI_FILE_SEARCH_STORE_NAME: ${{ vars.GEMINI_FILE_SEARCH_STORE_NAME || 'support-kb' }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.5-flash-lite' }}
+          MIN_ARTICLES: ${{ vars.MIN_ARTICLES || '30' }}
+          MAX_ARTICLES: ${{ vars.MAX_ARTICLES || '' }}
+          CHUNK_MAX_TOKENS: ${{ vars.CHUNK_MAX_TOKENS || '512' }}
+          CHUNK_OVERLAP_TOKENS: ${{ vars.CHUNK_OVERLAP_TOKENS || '64' }}
+          LOG_LEVEL: ${{ vars.LOG_LEVEL || 'INFO' }}
         run: |
-          mkdir -p "${{ github.workspace }}/data"
-          chmod a+rwx "${{ github.workspace }}/data"
+          mkdir -p "${GITHUB_WORKSPACE}/data"
+          chmod a+rwx "${GITHUB_WORKSPACE}/data"
 
-          EXTRA_ARGS=""
+          EXTRA_ARGS=()
           if [ "${DRY_RUN}" = "true" ]; then
-            EXTRA_ARGS="--dry-run"
+            EXTRA_ARGS+=(--dry-run)
           fi
 
           docker run --rm \
-            -v "${{ github.workspace }}/data:/app/data" \
-            -e API_KEY="${{ secrets.API_KEY }}" \
-            -e ZENDESK_BASE_URL="${{ secrets.ZENDESK_BASE_URL }}" \
-            -e SYSTEM_PROMPT="${{ secrets.SYSTEM_PROMPT }}" \
-            -e GEMINI_FILE_SEARCH_STORE_NAME="${{ vars.GEMINI_FILE_SEARCH_STORE_NAME || 'support-kb' }}" \
-            -e GEMINI_MODEL="${{ vars.GEMINI_MODEL || 'gemini-3.5-flash-lite' }}" \
-            -e MIN_ARTICLES="${{ vars.MIN_ARTICLES || '30' }}" \
-            -e MAX_ARTICLES="${{ vars.MAX_ARTICLES || '' }}" \
-            -e CHUNK_MAX_TOKENS="${{ vars.CHUNK_MAX_TOKENS || '512' }}" \
-            -e CHUNK_OVERLAP_TOKENS="${{ vars.CHUNK_OVERLAP_TOKENS || '64' }}" \
-            -e LOG_LEVEL="${{ vars.LOG_LEVEL || 'INFO' }}" \
-            kb-sync:ci ${EXTRA_ARGS}
+            -v "${GITHUB_WORKSPACE}/data:/app/data" \
+            -e API_KEY \
+            -e ZENDESK_BASE_URL \
+            -e SYSTEM_PROMPT \
+            -e GEMINI_FILE_SEARCH_STORE_NAME \
+            -e GEMINI_MODEL \
+            -e MIN_ARTICLES \
+            -e MAX_ARTICLES \
+            -e CHUNK_MAX_TOKENS \
+            -e CHUNK_OVERLAP_TOKENS \
+            -e LOG_LEVEL \
+            kb-sync:ci "${EXTRA_ARGS[@]}"
 
       - name: Publish run summary
         if: always()
@@ -57,15 +67,15 @@ jobs:
             echo "## Daily KB Sync Summary"
             echo ""
             if [ -f data/last_run.json ]; then
-              python3 -c "
+              python3 - <<'PY'
           import json
           with open('data/last_run.json', encoding='utf-8') as fh:
               d = json.load(fh)
           print('| Metric | Value |')
           print('| :--- | :--- |')
           for k in ('timestamp_utc', 'added', 'updated', 'skipped', 'failed', 'files_embedded', 'chunks_embedded'):
-              print(f'| {k} | {d.get(k, \"\")} |')
-          "
+              print(f'| {k} | {d.get(k, "")} |')
+          PY
             else
               echo "No \`data/last_run.json\` generated (dry-run or early failure)."
             fi

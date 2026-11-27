@@ -94,6 +94,8 @@ def test_tc_i05_docker_and_github_actions_workflow() -> None:
     assert "docker build" in workflow
     assert "docker run" in workflow
     assert "secrets.API_KEY" in workflow
+    assert "SYSTEM_PROMPT: ${{ secrets.SYSTEM_PROMPT }}" in workflow
+    assert "-e SYSTEM_PROMPT \\" in workflow
     assert "GITHUB_STEP_SUMMARY" in workflow
     assert "actions/checkout@v6" in workflow
     assert "actions/upload-artifact@v7" in workflow
