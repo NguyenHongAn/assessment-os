@@ -51,9 +51,9 @@ pytest -m live -v
 
 ## Daily Job Deployment & Logs
 
-Scheduled daily (`0 2 * * *` UTC) on DigitalOcean App Platform via [`.do/app.yaml`](.do/app.yaml) (see [`docs/deploy_digitalocean.md`](docs/deploy_digitalocean.md)). On ephemeral containers, `SyncPipeline` hydrates prior hashes and document IDs from Gemini `customMetadata` so only **added** or **updated** articles are uploaded.
+Scheduled daily (`0 2 * * *` UTC) on GitHub Actions via [`.github/workflows/daily-sync.yml`](.github/workflows/daily-sync.yml) (setup guide: [`docs/deploy_github_actions.md`](docs/deploy_github_actions.md)). On ephemeral runners, `SyncPipeline` hydrates prior hashes and document IDs from Gemini `customMetadata` so only **added** or **updated** articles are uploaded, then publishes a Job Summary table and `last-run-summary` artifact.
 
-- **Latest Job Logs / Run Artifact**: `<PASTE_DIGITALOCEAN_JOB_LOGS_URL>`
+- **Daily Job Logs & Run History**: https://github.com/NguyenHongAn/assessment-os/actions/workflows/daily-sync.yml
 
 ## Assistant Sanity Check
 

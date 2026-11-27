@@ -71,7 +71,7 @@ def test_tc_i03_cli_missing_api_key_returns_nonzero(
     assert "Configuration error" in capsys.readouterr().err
 
 
-def test_tc_i05_docker_and_digitalocean_spec_files() -> None:
+def test_tc_i05_docker_and_github_actions_workflow() -> None:
     repo_root = Path(__file__).resolve().parents[2]
 
     dockerfile = (repo_root / "Dockerfile").read_text(encoding="utf-8")
@@ -86,8 +86,13 @@ def test_tc_i05_docker_and_digitalocean_spec_files() -> None:
     assert ".venv" in dockerignore
     assert "data" in dockerignore
 
-    app_spec = (repo_root / ".do" / "app.yaml").read_text(encoding="utf-8")
-    assert "kind: SCHEDULED" in app_spec
-    assert 'cron: "0 2 * * *"' in app_spec
-    assert "dockerfile_path: Dockerfile" in app_spec
-    assert "key: API_KEY" in app_spec
+    workflow = (repo_root / ".github" / "workflows" / "daily-sync.yml").read_text(
+        encoding="utf-8"
+    )
+    assert 'cron: "0 2 * * *"' in workflow
+    assert "workflow_dispatch:" in workflow
+    assert "docker build" in workflow
+    assert "docker run" in workflow
+    assert "secrets.API_KEY" in workflow
+    assert "GITHUB_STEP_SUMMARY" in workflow
+    assert "actions/upload-artifact@v4" in workflow

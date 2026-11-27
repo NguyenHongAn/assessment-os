@@ -2,7 +2,7 @@
 
 **Stack Locked In**:
 - **AI Provider**: Google Gemini (`google-genai` File Search Store + AI Studio)
-- **Daily Job Hosting**: DigitalOcean (Dockerized one-shot job)
+- **Daily Job Hosting**: GitHub Actions (Dockerized one-shot job)
 
 ## Standing Engineering Rules (All Sprints)
 1. **Zero Brand Coupling**: No brand, company, or product-specific names/URLs in committed code, tests, defaults, or docs. Target Help Center URL (`ZENDESK_BASE_URL`) and assistant persona (`ASSISTANT_NAME`, `BRAND_NAME`, `SYSTEM_PROMPT`) are injected via environment variables only.
@@ -44,18 +44,18 @@
   - Configure the Support Assistant with the configured system prompt; run the sanity check and capture the screenshot with `Article URL:` citations.
 - **Tests Covered**: `TC-C06`–`TC-C12`, `TC-I02`, `TC-I04`.
 - **End-of-Sprint Summary**: Working API-only upload pipeline with verified idempotent delta updates, embedding count logs, passing component/integration tests, and verified Support Assistant screenshot.
-- **Next Sprint Will Do**: Wrap everything into the one-shot `main.py` runner, Dockerize it, and deploy the scheduled daily job on DigitalOcean with accessible logs.
+- **Next Sprint Will Do**: Wrap everything into the one-shot `main.py` runner, Dockerize it, and deploy the scheduled daily job on GitHub Actions with accessible logs.
 
 ---
 
-## Sprint 4 — One-Shot Job (`main.py`), Dockerization & DigitalOcean Daily Job (15 pts)
-- **Goal**: Package the scraper-uploader into a `Dockerfile` that runs once and exits `0`, and schedule it daily on DigitalOcean with viewable job logs/artifacts.
+## Sprint 4 — One-Shot Job (`main.py`), Dockerization & GitHub Actions Daily Job (15 pts)
+- **Goal**: Package the scraper-uploader into a `Dockerfile` that runs once and exits `0`, and schedule it daily on GitHub Actions with viewable job logs/artifacts.
 - **Feature Requirements**:
   - `main.py` entry point wiring scrape → normalize → delta → upload → summary logging (`added`, `updated`, `skipped`, `files`, `chunks`) and clean exit `0`.
   - `Dockerfile` (Python slim image) verified with `docker run -e API_KEY=... <image>` exiting `0`.
-  - Daily cron deployment on DigitalOcean with a shareable link to job logs / latest run artifact.
+  - Daily cron deployment on GitHub Actions with a shareable link to job logs / latest run artifact.
 - **Tests Covered**: `TC-I03`, `TC-I05`.
-- **End-of-Sprint Summary**: Containerized one-shot job passing locally and running on a daily DigitalOcean schedule with a verified log URL showing delta counts.
+- **End-of-Sprint Summary**: Containerized one-shot job passing locally and running on a daily GitHub Actions schedule with a verified log URL showing delta counts.
 - **Next Sprint Will Do**: Write the concise `<= 1 page` `README.md`, embed the screenshot and job log link, run full test & rubric audit, and push clean commits.
 
 ---

@@ -1,0 +1,80 @@
+name: Daily KB Sync
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run scrape and delta preview without uploading to Gemini"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  daily-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t kb-sync:ci .
+
+      - name: Run one-shot sync container
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          mkdir -p "${{ github.workspace }}/data"
+          chmod a+rwx "${{ github.workspace }}/data"
+
+          EXTRA_ARGS=""
+          if [ "${DRY_RUN}" = "true" ]; then
+            EXTRA_ARGS="--dry-run"
+          fi
+
+          docker run --rm \
+            -v "${{ github.workspace }}/data:/app/data" \
+            -e API_KEY="${{ secrets.API_KEY }}" \
+            -e ZENDESK_BASE_URL="${{ secrets.ZENDESK_BASE_URL }}" \
+            -e SYSTEM_PROMPT="${{ secrets.SYSTEM_PROMPT }}" \
+            -e GEMINI_FILE_SEARCH_STORE_NAME="${{ vars.GEMINI_FILE_SEARCH_STORE_NAME || 'support-kb' }}" \
+            -e GEMINI_MODEL="${{ vars.GEMINI_MODEL || 'gemini-3.5-flash-lite' }}" \
+            -e MIN_ARTICLES="${{ vars.MIN_ARTICLES || '30' }}" \
+            -e MAX_ARTICLES="${{ vars.MAX_ARTICLES || '' }}" \
+            -e CHUNK_MAX_TOKENS="${{ vars.CHUNK_MAX_TOKENS || '512' }}" \
+            -e CHUNK_OVERLAP_TOKENS="${{ vars.CHUNK_OVERLAP_TOKENS || '64' }}" \
+            -e LOG_LEVEL="${{ vars.LOG_LEVEL || 'INFO' }}" \
+            kb-sync:ci ${EXTRA_ARGS}
+
+      - name: Publish run summary
+        if: always()
+        run: |
+          {
+            echo "## Daily KB Sync Summary"
+            echo ""
+            if [ -f data/last_run.json ]; then
+              python3 -c "
+          import json
+          with open('data/last_run.json', encoding='utf-8') as fh:
+              d = json.load(fh)
+          print('| Metric | Value |')
+          print('| :--- | :--- |')
+          for k in ('timestamp_utc', 'added', 'updated', 'skipped', 'failed', 'files_embedded', 'chunks_embedded'):
+              print(f'| {k} | {d.get(k, \"\")} |')
+          "
+            else
+              echo "No \`data/last_run.json\` generated (dry-run or early failure)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload last-run summary artifact
+        if: always() && hashFiles('data/last_run.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: last-run-summary
+          path: data/last_run.json
+          retention-days: 30
